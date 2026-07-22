@@ -1,12 +1,29 @@
+module serpent:
+    snakefile: "/home/jb/development/serpent/workflow/Snakefile"
+
+use rule * from serpent as serpent_*
+
+OUTDIR = config["outdir"]["act"]["relatedness_ancestry"]
+GDS_OUTDIR = config["outdir"]["act"]["convert_gt_gds"]
+QC_OUTDIR = config["outdir"]["act"]["sample_variant_qc"]
+
+GENESIS_IMG = config["images"]["genesis"]
+
+# Upstream inter-module inputs
+GDS = f"{GDS_OUTDIR}/results/act_genotyped.gds"
+SAMPLES_PASS_QC = f"{QC_OUTDIR}/results/samples_pass_qc.rds"
+SAMPLE_METRICS = f"{QC_OUTDIR}/results/sample_metrics.rds"
+VARIANTS_PASS_QC = f"{QC_OUTDIR}/results/variants_pass_qc.rds"
+
 use rule snpgdsIBDKING from serpent as serpent_snpgdsIBDKING with:
     container: GENESIS_IMG
     input:
-        gds_fn="results/act_genotyped.gds",
-        sample_id="results/samples_pass_qc.rds",
-        snp_id = "results/variants_pass_qc.rds",
+        gds_fn=GDS,
+        sample_id=SAMPLES_PASS_QC,
+        snp_id=VARIANTS_PASS_QC,
     output:
-        king="results/king.rds",
-        grm="results/king_grm.rds",
+        king=f"{OUTDIR}/results/king.rds",
+        grm=f"{OUTDIR}/results/king_grm.rds",
     params:
         missing_rate=None,
         type="KING-robust",
@@ -15,21 +32,21 @@ use rule snpgdsIBDKING from serpent as serpent_snpgdsIBDKING with:
 use rule get_var_data from serpent as serpent_get_var_data with:
     container: GENESIS_IMG
     input:
-        gds_fn="results/act_genotyped.gds",
-        variant_id = "results/variants_pass_qc.rds",
+        gds_fn=GDS,
+        variant_id=VARIANTS_PASS_QC,
     output:
-        "results/snps_to_prune.rds",
+        f"{OUTDIR}/results/snps_to_prune.rds",
     params:
         build="hg38",
 
 use rule snpgdsLDpruning from serpent as serpent_ld_prune with:
     container: GENESIS_IMG
     input:
-        gds_fn="results/act_genotyped.gds",
-        sample_id="results/samples_pass_qc.rds",
-        variant_id = "results/snps_to_prune.rds",
+        gds_fn=GDS,
+        sample_id=SAMPLES_PASS_QC,
+        variant_id=f"{OUTDIR}/results/snps_to_prune.rds",
     output:
-        "results/snps_pruned.rds",
+        f"{OUTDIR}/results/snps_pruned.rds",
     params:
         method="corr",
         ld_threshold=0.2,
@@ -39,18 +56,18 @@ use rule snpgdsLDpruning from serpent as serpent_ld_prune with:
 use rule pcair from serpent as serpent_pcair_a with:
     container: GENESIS_IMG
     input:
-        gds_fn="results/act_genotyped.gds",
-        kinobj="results/king_grm.rds",
-        divobj="results/king_grm.rds",
-        sample_include="results/samples_pass_qc.rds",
-        snp_include="results/snps_pruned.rds",
-        pheno="results/sample_metrics.rds",
+        gds_fn=GDS,
+        kinobj=f"{OUTDIR}/results/king_grm.rds",
+        divobj=f"{OUTDIR}/results/king_grm.rds",
+        sample_include=SAMPLES_PASS_QC,
+        snp_include=f"{OUTDIR}/results/snps_pruned.rds",
+        pheno=SAMPLE_METRICS,
     output:
-        pcair="results/2_relatedness_ancestry/pcair_a.rds",
-        pcs="results/2_relatedness_ancestry/pcair_a_pcs.rds",
-        unrels="results/2_relatedness_ancestry/pcair_a_unrels.rds",
-        rels="results/2_relatedness_ancestry/pcair_a_rels.rds",
-        scree="figures/pcair_a/scree.png",
+        pcair=f"{OUTDIR}/results/2_relatedness_ancestry/pcair_a.rds",
+        pcs=f"{OUTDIR}/results/2_relatedness_ancestry/pcair_a_pcs.rds",
+        unrels=f"{OUTDIR}/results/2_relatedness_ancestry/pcair_a_unrels.rds",
+        rels=f"{OUTDIR}/results/2_relatedness_ancestry/pcair_a_rels.rds",
+        scree=f"{OUTDIR}/figures/pcair_a/scree.png",
     params:
         div_thresh=-2**(-11/2),
         kin_thresh=2**(-11/2),
@@ -58,20 +75,20 @@ use rule pcair from serpent as serpent_pcair_a with:
         maf=0.05,
         eigen_cnt=8,
         pc_pairs_group="cohort",
-        pairs_prfx="figures/pcair_a/pc_pairs",
+        pairs_prfx=f"{OUTDIR}/figures/pcair_a/pc_pairs",
         id_name="id",
     threads: 30
 
 use rule pcrelate from serpent as serpent_pcrelate_a with:
     container: GENESIS_IMG
     input:
-        gds_fn="results/act_genotyped.gds",
-        sample_include="results/samples_pass_qc.rds",
-        variant_id="results/snps_pruned.rds",
-        pca="results/2_relatedness_ancestry/pcair_a.rds",
+        gds_fn=GDS,
+        sample_include=SAMPLES_PASS_QC,
+        variant_id=f"{OUTDIR}/results/snps_pruned.rds",
+        pca=f"{OUTDIR}/results/2_relatedness_ancestry/pcair_a.rds",
     output:
-        pcr="results/2_relatedness_ancestry/pcr_a.rds",
-        grm="results/2_relatedness_ancestry/pcr_grm_a.rds",
+        pcr=f"{OUTDIR}/results/2_relatedness_ancestry/pcr_a.rds",
+        grm=f"{OUTDIR}/results/2_relatedness_ancestry/pcr_grm_a.rds",
     params:
         n_pcs=3,
         maf_thresh=0.05,
@@ -84,18 +101,18 @@ use rule pcrelate from serpent as serpent_pcrelate_a with:
 use rule pcair from serpent as serpent_pcair_b with:
     container: GENESIS_IMG
     input:
-        gds_fn="results/act_genotyped.gds",
-        kinobj="results/2_relatedness_ancestry/pcr_grm_a.rds",
-        divobj="results/king_grm.rds",
-        sample_include="results/samples_pass_qc.rds",
-        snp_include="results/snps_pruned.rds",
-        pheno="results/sample_metrics.rds",
+        gds_fn=GDS,
+        kinobj=f"{OUTDIR}/results/2_relatedness_ancestry/pcr_grm_a.rds",
+        divobj=f"{OUTDIR}/results/king_grm.rds",
+        sample_include=SAMPLES_PASS_QC,
+        snp_include=f"{OUTDIR}/results/snps_pruned.rds",
+        pheno=SAMPLE_METRICS,
     output:
-        pcair="results/2_relatedness_ancestry/pcair_b.rds",
-        pcs="results/2_relatedness_ancestry/pcair_b_pcs.rds",
-        unrels="results/2_relatedness_ancestry/pcair_b_unrels.rds",
-        rels="results/2_relatedness_ancestry/pcair_b_rels.rds",
-        scree="figures/pcair_b/scree.png",
+        pcair=f"{OUTDIR}/results/2_relatedness_ancestry/pcair_b.rds",
+        pcs=f"{OUTDIR}/results/2_relatedness_ancestry/pcair_b_pcs.rds",
+        unrels=f"{OUTDIR}/results/2_relatedness_ancestry/pcair_b_unrels.rds",
+        rels=f"{OUTDIR}/results/2_relatedness_ancestry/pcair_b_rels.rds",
+        scree=f"{OUTDIR}/figures/pcair_b/scree.png",
     params:
         div_thresh=-2**(-11/2),
         kin_thresh=2**(-11/2),
@@ -103,20 +120,20 @@ use rule pcair from serpent as serpent_pcair_b with:
         maf=0.05,
         eigen_cnt=8,
         pc_pairs_group="cohort",
-        pairs_prfx="figures/pcair_b/pc_pairs",
+        pairs_prfx=f"{OUTDIR}/figures/pcair_b/pc_pairs",
         id_name="id",
     threads: 30
 
 use rule pcrelate from serpent as serpent_pcrelate_b with:
     container: GENESIS_IMG
     input:
-        gds_fn="results/act_genotyped.gds",
-        sample_include="results/samples_pass_qc.rds",
-        variant_id="results/snps_pruned.rds",
-        pca="results/2_relatedness_ancestry/pcair_b.rds",
+        gds_fn=GDS,
+        sample_include=SAMPLES_PASS_QC,
+        variant_id=f"{OUTDIR}/results/snps_pruned.rds",
+        pca=f"{OUTDIR}/results/2_relatedness_ancestry/pcair_b.rds",
     output:
-        pcr="results/2_relatedness_ancestry/pcr_b.rds",
-        grm="results/2_relatedness_ancestry/pcr_grm_b.rds",
+        pcr=f"{OUTDIR}/results/2_relatedness_ancestry/pcr_b.rds",
+        grm=f"{OUTDIR}/results/2_relatedness_ancestry/pcr_grm_b.rds",
     params:
         n_pcs=3,
         maf_thresh=0.05,
