@@ -1,0 +1,127 @@
+use rule snpgdsIBDKING from serpent as serpent_snpgdsIBDKING with:
+    container: GENESIS_IMG
+    input:
+        gds_fn="results/act_genotyped.gds",
+        sample_id="results/samples_pass_qc.rds",
+        snp_id = "results/variants_pass_qc.rds",
+    output:
+        king="results/king.rds",
+        grm="results/king_grm.rds",
+    params:
+        missing_rate=None,
+        type="KING-robust",
+        verbose=True,
+
+use rule get_var_data from serpent as serpent_get_var_data with:
+    container: GENESIS_IMG
+    input:
+        gds_fn="results/act_genotyped.gds",
+        variant_id = "results/variants_pass_qc.rds",
+    output:
+        "results/snps_to_prune.rds",
+    params:
+        build="hg38",
+
+use rule snpgdsLDpruning from serpent as serpent_ld_prune with:
+    container: GENESIS_IMG
+    input:
+        gds_fn="results/act_genotyped.gds",
+        sample_id="results/samples_pass_qc.rds",
+        variant_id = "results/snps_to_prune.rds",
+    output:
+        "results/snps_pruned.rds",
+    params:
+        method="corr",
+        ld_threshold=0.2,
+        maf=0.01,
+        seed=51,
+
+use rule pcair from serpent as serpent_pcair_a with:
+    container: GENESIS_IMG
+    input:
+        gds_fn="results/act_genotyped.gds",
+        kinobj="results/king_grm.rds",
+        divobj="results/king_grm.rds",
+        sample_include="results/samples_pass_qc.rds",
+        snp_include="results/snps_pruned.rds",
+        pheno="results/sample_metrics.rds",
+    output:
+        pcair="results/2_relatedness_ancestry/pcair_a.rds",
+        pcs="results/2_relatedness_ancestry/pcair_a_pcs.rds",
+        unrels="results/2_relatedness_ancestry/pcair_a_unrels.rds",
+        rels="results/2_relatedness_ancestry/pcair_a_rels.rds",
+        scree="figures/pcair_a/scree.png",
+    params:
+        div_thresh=-2**(-11/2),
+        kin_thresh=2**(-11/2),
+        n_pairs=4,
+        maf=0.05,
+        eigen_cnt=8,
+        pc_pairs_group="cohort",
+        pairs_prfx="figures/pcair_a/pc_pairs",
+        id_name="id",
+    threads: 30
+
+use rule pcrelate from serpent as serpent_pcrelate_a with:
+    container: GENESIS_IMG
+    input:
+        gds_fn="results/act_genotyped.gds",
+        sample_include="results/samples_pass_qc.rds",
+        variant_id="results/snps_pruned.rds",
+        pca="results/2_relatedness_ancestry/pcair_a.rds",
+    output:
+        pcr="results/2_relatedness_ancestry/pcr_a.rds",
+        grm="results/2_relatedness_ancestry/pcr_grm_a.rds",
+    params:
+        n_pcs=3,
+        maf_thresh=0.05,
+        small_samp_correct=True,
+        variantBlock=3000,
+        verbose=True,
+        scaleKin=1,
+    threads: 30
+
+use rule pcair from serpent as serpent_pcair_b with:
+    container: GENESIS_IMG
+    input:
+        gds_fn="results/act_genotyped.gds",
+        kinobj="results/2_relatedness_ancestry/pcr_grm_a.rds",
+        divobj="results/king_grm.rds",
+        sample_include="results/samples_pass_qc.rds",
+        snp_include="results/snps_pruned.rds",
+        pheno="results/sample_metrics.rds",
+    output:
+        pcair="results/2_relatedness_ancestry/pcair_b.rds",
+        pcs="results/2_relatedness_ancestry/pcair_b_pcs.rds",
+        unrels="results/2_relatedness_ancestry/pcair_b_unrels.rds",
+        rels="results/2_relatedness_ancestry/pcair_b_rels.rds",
+        scree="figures/pcair_b/scree.png",
+    params:
+        div_thresh=-2**(-11/2),
+        kin_thresh=2**(-11/2),
+        n_pairs=4,
+        maf=0.05,
+        eigen_cnt=8,
+        pc_pairs_group="cohort",
+        pairs_prfx="figures/pcair_b/pc_pairs",
+        id_name="id",
+    threads: 30
+
+use rule pcrelate from serpent as serpent_pcrelate_b with:
+    container: GENESIS_IMG
+    input:
+        gds_fn="results/act_genotyped.gds",
+        sample_include="results/samples_pass_qc.rds",
+        variant_id="results/snps_pruned.rds",
+        pca="results/2_relatedness_ancestry/pcair_b.rds",
+    output:
+        pcr="results/2_relatedness_ancestry/pcr_b.rds",
+        grm="results/2_relatedness_ancestry/pcr_grm_b.rds",
+    params:
+        n_pcs=3,
+        maf_thresh=0.05,
+        small_samp_correct=True,
+        variantBlock=3000,
+        verbose=True,
+        scaleKin=2,
+    threads: 30
