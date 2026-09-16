@@ -1,15 +1,15 @@
 module serpent:
     snakefile: "/home/jb/development/serpent/workflow/Snakefile"
 
-OUTDIR = config["outdir"]["act"]["relatedness_ancestry"]
+OUTDIR = config["act"]["outdir"]["relatedness_ancestry"]
 
 rule all:
     input: 
         pcr=f"{OUTDIR}/results/2_relatedness_ancestry/pcr_b.rds",
         grm=f"{OUTDIR}/results/2_relatedness_ancestry/pcr_grm_b.rds",
 
-GDS_OUTDIR = config["outdir"]["act"]["convert_gt_gds"]
-QC_OUTDIR = config["outdir"]["act"]["sample_variant_qc"]
+GDS_OUTDIR = config["act"]["outdir"]["convert_gt_gds"]
+QC_OUTDIR = config["act"]["outdir"]["sample_variant_qc"]
 
 GENESIS_IMG = config["images"]["genesis"]
 
