@@ -31,7 +31,7 @@ use rule snpgdsIBDKING from serpent as serpent_snpgdsIBDKING with:
     log: f"{OUTDIR}/logs/snpgdsIBDKING.log"
     params:
         missing_rate=None,
-        type="KING-robust",
+        type=config["params"]["relatedness_ancestry"]["king_type"],
         verbose=True,
 
 use rule get_var_data from serpent as serpent_get_var_data with:
@@ -55,9 +55,9 @@ use rule snpgdsLDpruning from serpent as serpent_ld_prune with:
         f"{OUTDIR}/results/snps_pruned.rds",
     log: f"{OUTDIR}/logs/snpgdsLDpruning.log"
     params:
-        method="corr",
-        ld_threshold=0.2,
-        maf=0.01,
+        method=config["params"]["relatedness_ancestry"]["ld_method"],
+        ld_threshold=config["params"]["relatedness_ancestry"]["ld_thresh"],
+        maf=config["params"]["relatedness_ancestry"]["ld_maf"],
         seed=51,
 
 use rule pcair from serpent as serpent_pcair_a with:
@@ -77,10 +77,10 @@ use rule pcair from serpent as serpent_pcair_a with:
         scree=f"{OUTDIR}/figures/pcair_a/scree.png",
     log: f"{OUTDIR}/logs/pcair_a.log"
     params:
-        div_thresh=-2**(-11/2),
-        kin_thresh=2**(-11/2),
+        div_thresh=config["params"]["relatedness_ancestry"]["div_thresh"],
+        kin_thresh=config["params"]["relatedness_ancestry"]["kin_thresh"],
         n_pairs=4,
-        maf=0.05,
+        maf=config["params"]["relatedness_ancestry"]["pcair_maf"],
         eigen_cnt=8,
         pc_pairs_group="cohort",
         pairs_prfx=f"{OUTDIR}/figures/pcair_a/pc_pairs",
@@ -99,8 +99,8 @@ use rule pcrelate from serpent as serpent_pcrelate_a with:
         grm=f"{OUTDIR}/results/2_relatedness_ancestry/pcr_grm_a.rds",
     log: f"{OUTDIR}/logs/pcrelate_a.log"
     params:
-        n_pcs=3,
-        maf_thresh=0.05,
+        n_pcs=config["params"]["relatedness_ancestry"]["n_pcs"],
+        maf_thresh=config["params"]["relatedness_ancestry"]["pcair_maf"],
         small_samp_correct=True,
         variantBlock=3000,
         verbose=True,
@@ -124,10 +124,10 @@ use rule pcair from serpent as serpent_pcair_b with:
         scree=f"{OUTDIR}/figures/pcair_b/scree.png",
     log: f"{OUTDIR}/logs/pcair_b.log"
     params:
-        div_thresh=-2**(-11/2),
-        kin_thresh=2**(-11/2),
+        div_thresh=config["params"]["relatedness_ancestry"]["div_thresh"],
+        kin_thresh=config["params"]["relatedness_ancestry"]["kin_thresh"],
         n_pairs=4,
-        maf=0.05,
+        maf=config["params"]["relatedness_ancestry"]["pcair_maf"],
         eigen_cnt=8,
         pc_pairs_group="cohort",
         pairs_prfx=f"{OUTDIR}/figures/pcair_b/pc_pairs",
@@ -146,8 +146,8 @@ use rule pcrelate from serpent as serpent_pcrelate_b with:
         grm=f"{OUTDIR}/results/2_relatedness_ancestry/pcr_grm_b.rds",
     log: f"{OUTDIR}/logs/pcrelate_b.log"
     params:
-        n_pcs=3,
-        maf_thresh=0.05,
+        n_pcs=config["params"]["relatedness_ancestry"]["n_pcs"],
+        maf_thresh=config["params"]["relatedness_ancestry"]["pcair_maf"],
         small_samp_correct=True,
         variantBlock=3000,
         verbose=True,
