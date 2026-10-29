@@ -1,5 +1,5 @@
 module serpent:
-    snakefile: "/home/jb/development/serpent/workflow/Snakefile"
+    snakefile: github("broomej/serpent", "workflow/Snakefile", tag = config["versions"]["serpent"])
 
 OUTDIR = config["act"]["outdir"]["relatedness_ancestry"]
 
@@ -15,9 +15,10 @@ GENESIS_IMG = config["images"]["genesis"]
 
 # Upstream inter-module inputs
 GDS = f"{GDS_OUTDIR}/results/act_genotyped.gds"
-SAMPLES_PASS_QC = f"{QC_OUTDIR}/results/samples_pass_qc.rds"
-SAMPLE_METRICS = f"{QC_OUTDIR}/results/sample_metrics.rds"
-VARIANTS_PASS_QC = f"{QC_OUTDIR}/results/variants_pass_qc.rds"
+SAMPLES_PASS_QC = f"{QC_OUTDIR}/results/sample_include.rds"
+SAMPLES_GWAS = f"{QC_OUTDIR}/results/sample_include_gwas.rds"
+SAMPLE_METRICS = f"{QC_OUTDIR}/results/sample_metrics_typed.rds"
+VARIANTS_PASS_QC = f"{QC_OUTDIR}/results/typed/variants_pass_qc.rds"
 
 use rule snpgdsIBDKING from serpent as serpent_snpgdsIBDKING with:
     container: GENESIS_IMG
@@ -49,7 +50,7 @@ use rule snpgdsLDpruning from serpent as serpent_ld_prune with:
     container: GENESIS_IMG
     input:
         gds_fn=GDS,
-        sample_id=SAMPLES_PASS_QC,
+        sample_id=SAMPLES_GWAS,
         variant_id=f"{OUTDIR}/results/snps_to_prune.rds",
     output:
         f"{OUTDIR}/results/snps_pruned.rds",
@@ -66,7 +67,7 @@ use rule pcair from serpent as serpent_pcair_a with:
         gds_fn=GDS,
         kinobj=f"{OUTDIR}/results/king_grm.rds",
         divobj=f"{OUTDIR}/results/king_grm.rds",
-        sample_include=SAMPLES_PASS_QC,
+        sample_include=SAMPLES_GWAS,
         snp_include=f"{OUTDIR}/results/snps_pruned.rds",
         pheno=SAMPLE_METRICS,
     output:
@@ -91,7 +92,7 @@ use rule pcrelate from serpent as serpent_pcrelate_a with:
     container: GENESIS_IMG
     input:
         gds_fn=GDS,
-        sample_include=SAMPLES_PASS_QC,
+        sample_include=SAMPLES_GWAS,
         variant_id=f"{OUTDIR}/results/snps_pruned.rds",
         pca=f"{OUTDIR}/results/2_relatedness_ancestry/pcair_a.rds",
     output:
@@ -113,7 +114,7 @@ use rule pcair from serpent as serpent_pcair_b with:
         gds_fn=GDS,
         kinobj=f"{OUTDIR}/results/2_relatedness_ancestry/pcr_grm_a.rds",
         divobj=f"{OUTDIR}/results/king_grm.rds",
-        sample_include=SAMPLES_PASS_QC,
+        sample_include=SAMPLES_GWAS,
         snp_include=f"{OUTDIR}/results/snps_pruned.rds",
         pheno=SAMPLE_METRICS,
     output:
@@ -138,7 +139,7 @@ use rule pcrelate from serpent as serpent_pcrelate_b with:
     container: GENESIS_IMG
     input:
         gds_fn=GDS,
-        sample_include=SAMPLES_PASS_QC,
+        sample_include=SAMPLES_GWAS,
         variant_id=f"{OUTDIR}/results/snps_pruned.rds",
         pca=f"{OUTDIR}/results/2_relatedness_ancestry/pcair_b.rds",
     output:
