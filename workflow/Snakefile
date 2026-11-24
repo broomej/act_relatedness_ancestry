@@ -32,7 +32,7 @@ use rule snpgdsIBDKING from serpent as serpent_snpgdsIBDKING with:
     log: f"{OUTDIR}/logs/snpgdsIBDKING.log"
     params:
         snpgdsIBDKING_args={
-            "missing_rate": None,
+            "missing.rate": None,
             "type": config["params"]["relatedness_ancestry"]["king_type"],
             "verbose": True,
         }
