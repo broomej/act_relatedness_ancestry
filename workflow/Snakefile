@@ -107,12 +107,12 @@ use rule pcrelate from serpent as serpent_pcrelate_a with:
     params:
         n_pcs=config["params"]["relatedness_ancestry"]["n_pcs"],
         pcrelate_args={
-            "MAF": config["params"]["relatedness_ancestry"]["pcair_maf"],
-            "small_samp_correct": True,
-            "variantBlock": 3000,
-            "verbose": True,
-            "scaleKin": 1,
+            "maf.thresh": config["params"]["relatedness_ancestry"]["pcair_maf"],
+            "small.samp.correct": True,
         },
+        verbose=True,
+        scaleKin=1,
+        variantBlock=3000,
     threads: 30
 
 use rule pcair from serpent as serpent_pcair_b with:
@@ -158,10 +158,10 @@ use rule pcrelate from serpent as serpent_pcrelate_b with:
     params:
         n_pcs=config["params"]["relatedness_ancestry"]["n_pcs"],
         pcrelate_args={
-            "MAF": config["params"]["relatedness_ancestry"]["pcair_maf"],
-            "small_samp_correct": True,
-            "variantBlock": 3000,
-            "verbose": True,
-            "scaleKin": 2,
+            "maf.thresh": config["params"]["relatedness_ancestry"]["pcair_maf"],
+            "small.samp.correct": True,
         },
+        verbose=True,
+        scaleKin=2,
+        variantBlock=3000,
     threads: 30
